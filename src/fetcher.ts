@@ -6,14 +6,10 @@ import { Pair } from './entities/pair'
 import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
 import invariant from 'tiny-invariant'
 import ERC20 from './abis/ERC20.json'
-import { ChainId } from './constants'
+import { ChainId, RPC, TOKEN_DECIMALS_CACHE } from './constants'
 import { Token } from './entities/token'
 
-let TOKEN_DECIMALS_CACHE: { [chainId: number]: { [address: string]: number } } = {
-  [ChainId.ASTAR_TEST]: {
-    '0x4A81704d8C16d9FB0d7f61B747D0B5a272badf14': 9, //DGD
-  },
-}
+let CACHE = TOKEN_DECIMALS_CACHE
 
 /**
  * Contains methods for constructing instances of pairs and tokens from on-chain data.
@@ -40,15 +36,15 @@ export abstract class Fetcher {
     name?: string
   ): Promise<Token> {
     const parsedDecimals =
-      typeof TOKEN_DECIMALS_CACHE?.[chainId]?.[address] === 'number'
-        ? TOKEN_DECIMALS_CACHE[chainId][address]
+      typeof CACHE?.[chainId]?.[address] === 'number'
+        ? CACHE[chainId][address]
         : await new Contract(address, ERC20, provider).decimals().then((decimals: number): number => {
-            TOKEN_DECIMALS_CACHE = {
-              ...TOKEN_DECIMALS_CACHE,
+            CACHE = {
+              ...CACHE,
               [chainId]: {
-                ...TOKEN_DECIMALS_CACHE?.[chainId],
-                [address]: decimals,
-              },
+                ...CACHE?.[chainId],
+                [address]: decimals
+              }
             }
             return decimals
           })
@@ -61,7 +57,7 @@ export abstract class Fetcher {
    * @param tokenB second token
    */
   public static async fetchPairData(tokenA: Token, tokenB: Token): Promise<Pair> {
-    const provider = new JsonRpcProvider('https://rpc.astar.network:8545/')
+    const provider = new JsonRpcProvider(RPC)
     invariant(tokenA.chainId === tokenB.chainId, 'CHAIN_ID')
     const address = Pair.getAddress(tokenA, tokenB)
     const [reserves0, reserves1] = await new Contract(address, IUniswapV2Pair.abi, provider).getReserves()

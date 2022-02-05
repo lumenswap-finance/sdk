@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant'
-import { ChainId } from '../constants'
+import { ChainId, NATIVE_TOKENS } from '../constants'
 import { validateAndParseAddress } from '../utils'
 import { Currency } from './currency'
 
@@ -56,7 +56,4 @@ export function currencyEquals(currencyA: Currency, currencyB: Currency): boolea
   }
 }
 
-export const WETH = {
-  [ChainId.ASTAR_TEST]: new Token(ChainId.ASTAR_TEST, '0xAeaaf0e2c81Af264101B9129C00F4440cCF0F720', 18, 'DEV', 'DEV'),
-  [ChainId.ASTAR]: new Token(ChainId.ASTAR, '0xAeaaf0e2c81Af264101B9129C00F4440cCF0F720', 18, 'ASTAR', 'ASTAR'),
-}
+export const WETH = NATIVE_TOKENS
